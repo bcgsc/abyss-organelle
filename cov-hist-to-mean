@@ -1,0 +1,20 @@
+#!/bin/sh
+awk '
+	BEGIN { last_contig = -1 }
+	!/^genome/ { 
+		contig=$1;
+		cov=$2;
+		bases=$3;
+		if (last_contig == -1)
+			last_contig = contig;
+		if (contig != last_contig) {
+			printf("%s\t%.2f\n", last_contig, sum/count);
+			sum=0;
+			count=0;
+		}
+		sum += cov * bases;
+		count += bases;
+		last_contig = contig;
+	}' "$@"
+
+
