@@ -1,9 +1,0 @@
-#!/bin/sh
-cat "$@" | paste - - | \
-	awk -F'\t' '
-		{
-			split($1, header_parts, ">| ");
-			contig_name=header_parts[2];
-			print "contig_name\t"length($2);
-		}
-	'
