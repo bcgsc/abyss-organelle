@@ -1,0 +1,16 @@
+#!/bin/sh
+# I am using my own calculation here because the gc() function
+# built into bioawk includes non-AGCT (e.g. 'N') chars in the
+# denominator, and I don't want that.
+bioawk -c fastx '{
+	atgc_count=0;
+	gc_count=0;
+	split($seq, bases, "");
+	for (i=1; i <= length($seq); i++) {
+		if (match(bases[i], "^[agctAGCT]$"))
+			atgc_count++;
+		if (match(bases[i], "^[gcGC]$"))
+			gc_count++;
+	}
+	printf("%s\t%.4f\n", $name, gc_count/atgc_count);
+}' "$@"
