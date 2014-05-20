@@ -48,6 +48,7 @@ $(name).cov_gc_len.tab.gz: $(name).genomecov.hist
 		<(fa2gc $(ref) | sort) | \
 		join -t $$'\t' - <(bioawk -c fastx '{print $$name, length($$seq)}' $(ref) | sort) | \
 		sort -n | \
+		(echo -e 'contig\tcov\tgc\tlen'; cat -) | \
 		gzip -c > $@
 
 $(name).genomecov.hist: $(bam).bai
