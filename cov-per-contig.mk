@@ -30,14 +30,6 @@ default: args_check $(name).genomecov.hist
 #------------------------------------------------------------
 
 args_check:
-ifndef sam
-ifndef ref
-	$(error missing required arg 'ref')
-endif
-ifndef readfiles
-	$(error missing required arg 'readfiles')
-endif
-endif
 ifndef name
 	$(error missing required arg 'name')
 endif
@@ -59,5 +51,7 @@ $(bam): $(sam)
 	smartcat $< | samtools view -bSo $(bam) -
 else
 $(bam).bai: $(ref) $(readfiles)
+	$(if $(ref),,$(error missing required arg 'ref'))
+	$(if $(readfiles),,$(error missing required arg 'readfiles'))
 	bwa-mem.mk queryfiles='$(readfiles)' target='$(ref)' name='$(name)'
 endif
