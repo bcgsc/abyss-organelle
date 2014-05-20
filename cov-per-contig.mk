@@ -24,13 +24,16 @@ endif
 #------------------------------------------------------------
 
 .PHONY: args_check
-default: args_check $(name).genomecov.hist
+default: args_check $(name).cov_gc_len.tab.gz
 
 #------------------------------------------------------------
 # argument checking
 #------------------------------------------------------------
 
 args_check:
+ifndef ref
+	$(error missing required arg 'ref')
+endif
 ifndef name
 	$(error missing required arg 'name')
 endif
@@ -39,8 +42,12 @@ endif
 # main rules
 #------------------------------------------------------------
 
-$(name).cov-per-contig.tab: $(name).genomecov.hist
-	cov-hist-to-mean $< > $@
+$(name).cov_gc_len.tab.gz: $(name).genomecov.hist
+	join -t $$'\t' \
+		<(cov-hist-to-mean $< | sort) \
+		<(bioawk -c fastx '{print $$name, gc($$seq), length($$seq)}' $(ref) | sort) | \
+			sort -n | \
+			gzip -c > $@
 
 $(name).genomecov.hist: $(bam).bai
 	bedtools genomecov -ibam $(bam) | egrep -v '^genome' > $@
@@ -52,7 +59,6 @@ $(bam): $(sortedsam)
 	smartcat $< | samtools view -bSo $(bam) -
 else
 $(bam).bai: $(ref) $(readfiles)
-	$(if $(ref),,$(error missing required arg 'ref'))
 	$(if $(readfiles),,$(error missing required arg 'readfiles'))
 	bwa-mem.mk queryfiles='$(readfiles)' target='$(ref)' name='$(name)'
 endif
