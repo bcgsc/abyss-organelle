@@ -11,8 +11,9 @@ PATH:=/home/benv/arch/genesis/bedtools-2.17.0/bin:/home/benv/arch/genesis/bwa-0.
 # global vars
 #------------------------------------------------------------
 
-ifdef sam
-	bam:=$(notdir $(shell basename -s .sam -s .sam.gz $(sam))).sorted.bam
+ifdef sortedsam
+	sam_basename:=$(notdir $(shell basename -s .sam -s .sam.gz $(sortedsam)))
+	bam:=$(sam_basename).sorted.bam
 endif
 ifndef bam
 	bam:=$(name).sorted.bam
@@ -44,10 +45,10 @@ $(name).cov-per-contig.tab: $(name).genomecov.hist
 $(name).genomecov.hist: $(bam).bai
 	bedtools genomecov -ibam $(bam) | egrep -v '^genome' > $@
 
-ifdef sam
+ifdef sortedsam
 $(bam).bai: $(bam)
 	samtools index $(bam)
-$(bam): $(sam)
+$(bam): $(sortedsam)
 	smartcat $< | samtools view -bSo $(bam) -
 else
 $(bam).bai: $(ref) $(readfiles)
