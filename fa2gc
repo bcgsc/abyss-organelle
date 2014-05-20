@@ -5,11 +5,13 @@
 bioawk -c fastx '{
 	atgc_count=0;
 	gc_count=0;
-	split($seq, bases, "");
-	for (i=1; i <= length($seq); i++) {
-		if (match(bases[i], "^[agctAGCT]$"))
+	SEQ=toupper($seq);
+	split(SEQ, bases, "");
+	for (i=1; i <= length(SEQ); i++) {
+		if (bases[i] == "A" || bases[i] == "T" ||
+			bases[i] == "G" || bases[i] == "C")
 			atgc_count++;
-		if (match(bases[i], "^[gcGC]$"))
+		if (bases[i] == "G" || bases[i] == "C")
 			gc_count++;
 	}
 	printf("%s\t%.4f\n", $name, gc_count/atgc_count);
