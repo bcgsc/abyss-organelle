@@ -45,9 +45,10 @@ endif
 $(name).cov_gc_len.tab.gz: $(name).genomecov.hist
 	join -t $$'\t' \
 		<(cov-hist-to-mean $< | sort) \
-		<(bioawk -c fastx '{print $$name, gc($$seq), length($$seq)}' $(ref) | sort) | \
-			sort -n | \
-			gzip -c > $@
+		<(fa2gc $(ref) | sort) | \
+		join -t $$'\t' - <(bioawk -c fastx '{print $$name, length($$seq)}' $(ref) | sort) | \
+		sort -n | \
+		gzip -c > $@
 
 $(name).genomecov.hist: $(bam).bai
 	bedtools genomecov -ibam $(bam) | egrep -v '^genome' > $@
