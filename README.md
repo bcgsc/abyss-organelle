@@ -1,3 +1,12 @@
-cov-per-contig.mk: do bwa-mem alignments and determine mean coverage per contig
-cov-hist-to-mean: convert 'bedtools genomecov' coverage histogram output to "contig-name TAB mean-coverage"
-fa-to-gc: print "contig-name TAB %gc-content" for each seq in FASTA file
+# Description
+
+Utilities to assemble an organelle genome using ABySS.
+
+# Tools
+
+* classify.mk: split contigs file into 'organelle' and 'genome' contigs using k-means clustering on coverage, %GC content, and length
+* classify.r: R script to do k-means clustering for classify.mk
+* bwa-mem.mk: Makefile to do an alignment with bwa mem, sort, index, etc.
+* cov-hist-to-mean: convert 'bedtools genomecov' output to mean coverage per contig
+* fastx2gc: compute %GC content for each seq in a FASTA/FASTQ file
+* smartcat: does zcat/bzcat/cat based on file type
