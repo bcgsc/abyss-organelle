@@ -11,6 +11,13 @@ PATH:=/home/benv/arch/genesis/bedtools-2.17.0/bin:/home/benv/arch/genesis/bwa-0.
 # global vars
 #------------------------------------------------------------
 
+# Sub directories for intermediate files (to reduce clutter)
+tmp=$(name)-tmp
+
+# If "sortedsam" is provided, that SAM file is for the
+# read-to-contig alignments, rather than generating them from
+# scratch.
+
 ifdef sortedsam
 	sam_basename:=$(notdir $(shell basename -s .sam -s .sam.gz $(sortedsam)))
 	bam:=$(sam_basename).sorted.bam
@@ -42,7 +49,10 @@ endif
 # main rules
 #------------------------------------------------------------
 
-$(name).cov_gc_len.tab.gz: $(name).genomecov.hist
+$(tmp):
+	mkdir -p $(tmp)
+
+$(name).cov_gc_len.tab.gz: $(tmp)/$(name).genomecov.hist
 	join -t $$'\t' \
 		<(cov-hist-to-mean $< | sort) \
 		<(fa2gc $(ref) | sort) | \
@@ -51,16 +61,16 @@ $(name).cov_gc_len.tab.gz: $(name).genomecov.hist
 		(echo -e 'contig\tcov\tgc\tlen'; cat -) | \
 		gzip -c > $@
 
-$(name).genomecov.hist: $(bam).bai
-	bedtools genomecov -ibam $(bam) | egrep -v '^genome' > $@
+$(tmp)/$(name).genomecov.hist: $(tmp)/$(bam).bai
+	bedtools genomecov -ibam $(tmp)/$(bam) | egrep -v '^genome' > $@
 
 ifdef sortedsam
-$(bam).bai: $(bam)
-	samtools index $(bam)
-$(bam): $(sortedsam)
-	smartcat $< | samtools view -bSo $(bam) -
+$(tmp)/$(bam).bai: $(tmp)/$(bam)
+	samtools index $(tmp)/$(bam)
+$(tmp)/$(bam): $(sortedsam) | $(tmp)
+	smartcat $< | samtools view -bSo $(tmp)/$(bam) -
 else
-$(bam).bai: $(ref) $(readfiles)
+$(tmp)/$(bam).bai: $(ref) $(readfiles) | $(tmp)
 	$(if $(readfiles),,$(error missing required arg 'readfiles'))
-	bwa-mem.mk queryfiles='$(readfiles)' target='$(ref)' name='$(name)'
+	bwa-mem.mk queryfiles='$(readfiles)' target='$(ref)' name='$(tmp)/$(name)'
 endif
