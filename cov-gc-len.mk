@@ -49,20 +49,12 @@ endif
 # main rules
 #------------------------------------------------------------
 
+# make subdir to store intermediate files (to reduce clutter)
+
 $(tmp):
 	mkdir -p $(tmp)
 
-$(name).cov_gc_len.tab.gz: $(tmp)/$(name).genomecov.hist
-	join -t $$'\t' \
-		<(cov-hist-to-mean $< | sort) \
-		<(fa2gc $(ref) | sort) | \
-		join -t $$'\t' - <(bioawk -c fastx '{print $$name, length($$seq)}' $(ref) | sort) | \
-		sort -n | \
-		(echo -e 'contig\tcov\tgc\tlen'; cat -) | \
-		gzip -c > $@
-
-$(tmp)/$(name).genomecov.hist: $(tmp)/$(bam).bai
-	bedtools genomecov -ibam $(tmp)/$(bam) | egrep -v '^genome' > $@
+# build bam file for read-to-contig alignments
 
 ifdef sortedsam
 $(tmp)/$(bam).bai: $(tmp)/$(bam)
@@ -74,3 +66,41 @@ $(tmp)/$(bam).bai: $(ref) $(readfiles) | $(tmp)
 	$(if $(readfiles),,$(error missing required arg 'readfiles'))
 	bwa-mem.mk queryfiles='$(readfiles)' target='$(ref)' name='$(tmp)/$(name)'
 endif
+
+# use 'bedtools genomecov' to convert read-to-contig alignment to
+# per-contig coverage
+
+$(tmp)/$(name).genomecov.txt.gz: $(tmp)/$(bam).bai
+	bedtools genomecov -ibam $(tmp)/$(bam) | \
+		egrep -v '^genome' | \
+		gzip -c > $@
+
+# convert 'bedtools genomecov' output to mean coverage per contig
+
+$(tmp)/$(name).cov.tab.gz: $(tmp)/$(name).genomecov.txt.gz
+	zcat $< | cov-hist-to-mean | sort | \
+		(echo -e 'contig\tcov'; cat -) | \
+		gzip -c > $@
+
+# compute %GC content per contig
+
+$(tmp)/$(name).gc.tab.gz: $(ref)
+	fa2gc $(ref) | sort | \
+		(echo -e 'contig\tgc'; cat -) | \
+		gzip -c > $@
+
+# compute contig lengths
+
+$(tmp)/$(name).len.tab.gz: $(ref)
+	bioawk -c fastx '{print $$name, length($$seq)}' $(ref) | sort | \
+		(echo -e 'contig\tlen'; cat -) | \
+		gzip -c > $@
+
+$(name).cov_gc_len.tab.gz: \
+		$(tmp)/$(name).cov.tab.gz \
+		$(tmp)/$(name).gc.tab.gz \
+		$(tmp)/$(name).len.tab.gz
+	join -t $$'\t' <(zcat $(word 1, $^)) <(zcat $(word 2, $^)) | \
+		join -t $$'\t' - <(zcat $(word 3, $^)) | \
+		sort -n | \
+		gzip -c > $@
