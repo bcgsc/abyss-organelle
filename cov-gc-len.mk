@@ -13,6 +13,7 @@ PATH:=/home/benv/arch/genesis/bedtools-2.17.0/bin:/home/benv/arch/genesis/bwa-0.
 
 # Sub directories for intermediate files (to reduce clutter)
 tmp=$(name)-tmp
+plotdir=$(name)-plots
 
 # If "sortedsam" is provided, that SAM file is for the
 # read-to-contig alignments, rather than generating them from
@@ -31,7 +32,7 @@ endif
 #------------------------------------------------------------
 
 .PHONY: args_check
-default: args_check $(name).cov_gc_len.tab.gz
+default: args_check $(tmp)/$(name).cov_gc_len_class.tab.gz
 
 #------------------------------------------------------------
 # argument checking
@@ -52,7 +53,10 @@ endif
 # make subdir to store intermediate files (to reduce clutter)
 
 $(tmp):
-	mkdir -p $(tmp)
+	mkdir -p $@
+
+$(plotdir):
+	mkdir -p $@
 
 # build bam file for read-to-contig alignments
 
@@ -96,7 +100,9 @@ $(tmp)/$(name).len.tab.gz: $(ref)
 		(echo -e 'contig\tlen'; cat -) | \
 		gzip -c > $@
 
-$(name).cov_gc_len.tab.gz: \
+# join contig ID, coverage, %GC, and length into one file
+
+$(tmp)/$(name).cov_gc_len.tab.gz: \
 		$(tmp)/$(name).cov.tab.gz \
 		$(tmp)/$(name).gc.tab.gz \
 		$(tmp)/$(name).len.tab.gz
@@ -104,3 +110,8 @@ $(name).cov_gc_len.tab.gz: \
 		join -t $$'\t' - <(zcat $(word 3, $^)) | \
 		sort -n | \
 		gzip -c > $@
+
+# classify contigs using kmeans clustering in R
+
+$(tmp)/$(name).cov_gc_len_class.tab.gz: $(tmp)/$(name).cov_gc_len.tab.gz | $(plotdir)
+	Rscript $(shell which classify.r) $(plotdir) $< $@
