@@ -89,7 +89,7 @@ $(tmp)/$(name).cov.tab.gz: $(tmp)/$(name).genomecov.txt.gz
 # compute %GC content per contig
 
 $(tmp)/$(name).gc.tab.gz: $(ref)
-	fa2gc $(ref) | sort | \
+	fastx2gc $(ref) | sort | \
 		(echo -e 'contig\tgc'; cat -) | \
 		gzip -c > $@
 
