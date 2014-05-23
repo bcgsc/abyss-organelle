@@ -14,6 +14,7 @@ The following tools must be installed and available on your PATH:
 
 # Tools
 
+* abyss-organelle.mk (main script): do a standard ABySS assembly and then extract organelle scaffolds
 * classify.mk: split contigs file into 'organelle' and 'genome' contigs using k-means clustering on coverage, %GC content, and length
 * classify.r: R script to do k-means clustering for classify.mk
 * bwa-mem.mk: Makefile to do an alignment with bwa mem, sort, index, etc.
