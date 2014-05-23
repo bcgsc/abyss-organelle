@@ -31,7 +31,7 @@ endif
 #------------------------------------------------------------
 
 .PHONY: args_check
-default: args_check $(tmp)/$(name).cov_gc_len_class.tab.gz
+default: args_check $(name)-organelle.fa.gz
 
 #------------------------------------------------------------
 # argument checking
@@ -107,10 +107,20 @@ $(tmp)/$(name).cov_gc_len.tab.gz: \
 		$(tmp)/$(name).len.tab.gz
 	join -t $$'\t' <(zcat $(word 1, $^)) <(zcat $(word 2, $^)) | \
 		join -t $$'\t' - <(zcat $(word 3, $^)) | \
-		sort -n | \
 		gzip -c > $@
 
 # classify contigs using kmeans clustering in R
 
 $(tmp)/$(name).cov_gc_len_class.tab.gz: $(tmp)/$(name).cov_gc_len.tab.gz | $(plotdir)
 	Rscript $(shell which classify.r) $(plotdir) $< $@
+
+# build FASTA file of organelle contigs
+
+$(name)-organelle.fa.gz: $(tmp)/$(name).cov_gc_len_class.tab.gz $(ref)
+	zcat $(word 1, $^) | \
+		awk 'NR>1' | \
+		join -t $$'\t' - <(bioawk -c fastx '{print $$name, $$seq}' $(word 2, $^) | sort) | \
+		(echo -e 'contig\tcov\tgc\tlen\tclass\tseq'; cat -) | \
+		sort -n | \
+		bioawk -c header '$$class == "organelle" { print ">"$$contig; print $$seq }' | \
+		gzip -c > $@
