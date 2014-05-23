@@ -5,7 +5,6 @@
 #------------------------------------------------------------
 
 SHELL:=/bin/bash -o pipefail
-PATH:=/home/benv/arch/genesis/bedtools-2.17.0/bin:/home/benv/arch/genesis/bwa-0.7.4/bin:/home/benv/bin/myscripts:$(PATH)
 
 #------------------------------------------------------------
 # global vars
