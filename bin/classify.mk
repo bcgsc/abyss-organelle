@@ -10,6 +10,9 @@ SHELL:=/bin/bash -o pipefail
 # global vars
 #------------------------------------------------------------
 
+# make 'sort' and 'join' use the same sort order
+sort=LC_COLLATE=C sort
+
 # Sub directories for intermediate files (to reduce clutter)
 tmp=$(name)-tmp
 plotdir=$(name)-plots
@@ -81,21 +84,21 @@ $(tmp)/$(name).genomecov.txt.gz: $(tmp)/$(bam).bai
 # convert 'bedtools genomecov' output to mean coverage per contig
 
 $(tmp)/$(name).cov.tab.gz: $(tmp)/$(name).genomecov.txt.gz
-	zcat $< | cov-hist-to-mean | sort | \
+	zcat $< | cov-hist-to-mean | $(sort) | \
 		(echo -e 'contig\tcov'; cat -) | \
 		gzip -c > $@
 
 # compute %GC content per contig
 
 $(tmp)/$(name).gc.tab.gz: $(ref)
-	fastx2gc $(ref) | sort | \
+	fastx2gc $(ref) | $(sort) | \
 		(echo -e 'contig\tgc'; cat -) | \
 		gzip -c > $@
 
 # compute contig lengths
 
 $(tmp)/$(name).len.tab.gz: $(ref)
-	bioawk -c fastx '{print $$name, length($$seq)}' $(ref) | sort | \
+	bioawk -c fastx '{print $$name, length($$seq)}' $(ref) | $(sort) | \
 		(echo -e 'contig\tlen'; cat -) | \
 		gzip -c > $@
 
@@ -119,8 +122,8 @@ $(tmp)/$(name).cov_gc_len_class.tab.gz: $(tmp)/$(name).cov_gc_len.tab.gz | $(plo
 $(name)-organelle.fa.gz: $(tmp)/$(name).cov_gc_len_class.tab.gz $(ref)
 	zcat $(word 1, $^) | \
 		awk 'NR>1' | \
-		join -t $$'\t' - <(bioawk -c fastx '{print $$name, $$seq}' $(word 2, $^) | sort) | \
+		join -t $$'\t' - <(bioawk -c fastx '{print $$name, $$seq}' $(word 2, $^) | $(sort)) | \
 		(echo -e 'contig\tcov\tgc\tlen\tclass\tseq'; cat -) | \
-		sort -n | \
+		$(sort) -n | \
 		bioawk -c header '$$class == "organelle" { print ">"$$contig; print $$seq }' | \
 		gzip -c > $@
