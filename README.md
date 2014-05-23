@@ -2,6 +2,16 @@
 
 Utilities to assemble an organelle genome using ABySS.
 
+# Dependencies
+
+The following tools must be installed and available on your PATH:
+
+* samtools
+* bwa
+* bioawk
+* bedtools
+* R
+
 # Tools
 
 * classify.mk: split contigs file into 'organelle' and 'genome' contigs using k-means clustering on coverage, %GC content, and length
