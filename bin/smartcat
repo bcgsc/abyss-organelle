@@ -1,4 +1,8 @@
 #!/bin/bash
+
+# Based on GitHub Gist written by David Bartle (github user captin411):
+# https://gist.github.com/captin411/912068
+
 for FILE in "$@"; do
 	MIME=$(file -bi $FILE)
 	case $MIME in
