@@ -123,7 +123,7 @@ $(name)-organelle.fa.gz: $(tmp)/$(name).cov_gc_len_class.tab.gz $(ref)
 	zcat $(word 1, $^) | \
 		awk 'NR>1' | \
 		join -t $$'\t' - <(bioawk -c fastx '{print $$name, $$seq}' $(word 2, $^) | $(sort)) | \
-		(echo -e 'contig\tcov\tgc\tlen\tclass\tseq'; cat -) | \
 		$(sort) -n | \
+		(echo -e 'contig\tcov\tgc\tlen\tclass\tseq'; cat -) | \
 		bioawk -c header '$$class == "organelle" { print ">"$$contig; print $$seq }' | \
 		gzip -c > $@
