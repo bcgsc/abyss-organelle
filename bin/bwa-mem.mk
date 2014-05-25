@@ -22,7 +22,7 @@ $(target).bwt: $(target)
 	bwa index $(target)
 
 $(name).sam.gz: $(target).bwt $(queryfiles)
-	smartcat $(queryfiles) | bwa mem $(bwa_opt) $(target) - | gzip -c > $@
+	abyss-tofastq $(queryfiles) | bwa mem $(bwa_opt) $(target) - | gzip -c > $@
 
 $(name).bam: $(name).sam.gz
 	zcat $< | samtools view -bSo $@ -
