@@ -14,7 +14,7 @@ SHELL:=/bin/bash -o pipefail
 sort=LC_COLLATE=C sort
 
 # Sub directories for intermediate files (to reduce clutter)
-tmp=$(name)-tmp
+tmp=$(name)-data
 plotdir=$(name)-plots
 
 # number of threads
@@ -37,7 +37,7 @@ endif
 #------------------------------------------------------------
 
 .PHONY: args_check
-default: args_check $(name)-organelle.fa.gz
+default: args_check $(name).fa.gz
 
 #------------------------------------------------------------
 # argument checking
@@ -122,7 +122,7 @@ $(tmp)/$(name).cov_gc_len_class.tab.gz: $(tmp)/$(name).cov_gc_len.tab.gz | $(plo
 
 # build FASTA file of organelle contigs
 
-$(name)-organelle.fa.gz: $(tmp)/$(name).cov_gc_len_class.tab.gz $(ref)
+$(name).fa.gz: $(tmp)/$(name).cov_gc_len_class.tab.gz $(ref)
 	zcat $(word 1, $^) | \
 		awk 'NR>1' | \
 		join -t $$'\t' - <(bioawk -c fastx '{print $$name, $$seq}' $(word 2, $^) | $(sort)) | \
