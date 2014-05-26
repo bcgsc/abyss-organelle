@@ -17,6 +17,9 @@ sort=LC_COLLATE=C sort
 tmp=$(name)-tmp
 plotdir=$(name)-plots
 
+# number of threads
+j?=1
+
 # If "sortedsam" is provided, that SAM file is for the
 # read-to-contig alignments, rather than generating them from
 # scratch.
@@ -70,7 +73,7 @@ $(tmp)/$(bam): $(sortedsam) | $(tmp)
 else
 $(tmp)/$(bam).bai: $(ref) $(readfiles) | $(tmp)
 	$(if $(readfiles),,$(error missing required arg 'readfiles'))
-	bwa-mem.mk queryfiles='$(readfiles)' target='$(ref)' name='$(tmp)/$(name)'
+	bwa-mem.mk j=$j queryfiles='$(readfiles)' target='$(ref)' name='$(tmp)/$(name)'
 endif
 
 # use 'bedtools genomecov' to convert read-to-contig alignment to

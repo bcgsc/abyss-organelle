@@ -3,6 +3,9 @@
 SHELL:=/bin/bash -o pipefail
 PATH:=/home/benv/arch/genesis/bwa-0.7.4/bin:$(PATH)
 
+# number of threads
+j?=1
+
 ifndef queryfiles
 error::
 	$(error missing parameter 'queryfiles')
@@ -22,7 +25,7 @@ $(target).bwt: $(target)
 	bwa index $(target)
 
 $(name).sam.gz: $(target).bwt $(queryfiles)
-	abyss-tofastq $(queryfiles) | bwa mem $(bwa_opt) $(target) - | gzip -c > $@
+	abyss-tofastq $(queryfiles) | bwa mem -t$j $(bwa_opt) $(target) - | gzip -c > $@
 
 $(name).bam: $(name).sam.gz
 	zcat $< | samtools view -bSo $@ -
