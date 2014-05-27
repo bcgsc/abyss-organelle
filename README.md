@@ -6,6 +6,7 @@ Utilities to assemble an organelle genome using ABySS.
 
 The following tools must be installed and available on your PATH:
 
+* ABySS
 * samtools
 * bwa
 * bioawk
@@ -20,7 +21,7 @@ The following tools must be installed and available on your PATH:
 * bwa-mem.mk: Makefile to do an alignment with bwa mem, sort, index, etc.
 * cov-hist-to-mean: convert 'bedtools genomecov' output to mean coverage per contig
 * fastx2gc: compute %GC content for each seq in a FASTA/FASTQ file
-* smartcat: does zcat/bzcat/cat based on file type
+* smartcat: does zcat/bzcat/cat based on file type (thanks to David Bartle)
 
 # Usage
 
