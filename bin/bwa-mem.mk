@@ -25,10 +25,12 @@ $(target).bwt: $(target)
 	bwa index $(target)
 
 $(name).sam.gz: $(target).bwt $(queryfiles)
-	abyss-tofastq $(queryfiles) | bwa mem -t$j $(bwa_opt) $(target) - | gzip -c > $@
+	abyss-tofastq $(queryfiles) | bwa mem -t$j $(bwa_opt) $(target) - | gzip -c > $@.incomplete
+	mv $@.incomplete $@
 
 $(name).bam: $(name).sam.gz
-	zcat $< | samtools view -bSo $@ -
+	zcat $< | samtools view -bSo $@.incomplete -
+	mv $@.incomplete $@
 
 $(name).sorted.bam: $(name).bam
 	samtools sort $< $(name).sorted

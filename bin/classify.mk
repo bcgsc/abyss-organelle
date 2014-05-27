@@ -82,28 +82,32 @@ endif
 $(tmp)/$(name).genomecov.txt.gz: $(tmp)/$(bam).bai
 	bedtools genomecov -ibam $(tmp)/$(bam) | \
 		egrep -v '^genome' | \
-		gzip -c > $@
+		gzip -c > $@.incomplete
+	mv $@.incomplete $@
 
 # convert 'bedtools genomecov' output to mean coverage per contig
 
 $(tmp)/$(name).cov.tab.gz: $(tmp)/$(name).genomecov.txt.gz
 	zcat $< | cov-hist-to-mean | $(sort) | \
 		(echo -e 'contig\tcov'; cat -) | \
-		gzip -c > $@
+		gzip -c > $@.incomplete
+	mv $@.incomplete $@
 
 # compute %GC content per contig
 
 $(tmp)/$(name).gc.tab.gz: $(ref)
 	fastx2gc $(ref) | $(sort) | \
 		(echo -e 'contig\tgc'; cat -) | \
-		gzip -c > $@
+		gzip -c > $@.incomplete
+	mv $@.incomplete $@
 
 # compute contig lengths
 
 $(tmp)/$(name).len.tab.gz: $(ref)
 	bioawk -c fastx '{print $$name, length($$seq)}' $(ref) | $(sort) | \
 		(echo -e 'contig\tlen'; cat -) | \
-		gzip -c > $@
+		gzip -c > $@.incomplete
+	mv $@.incomplete $@
 
 # join contig ID, coverage, %GC, and length into one file
 
@@ -113,7 +117,8 @@ $(tmp)/$(name).cov_gc_len.tab.gz: \
 		$(tmp)/$(name).len.tab.gz
 	join -t $$'\t' <(zcat $(word 1, $^)) <(zcat $(word 2, $^)) | \
 		join -t $$'\t' - <(zcat $(word 3, $^)) | \
-		gzip -c > $@
+		gzip -c > $@.incomplete
+	mv $@.incomplete $@
 
 # classify contigs using kmeans clustering in R
 
@@ -129,4 +134,5 @@ $(name).fa.gz: $(tmp)/$(name).cov_gc_len_class.tab.gz $(ref)
 		$(sort) -n | \
 		(echo -e 'contig\tcov\tgc\tlen\tclass\tseq'; cat -) | \
 		bioawk -c header '$$class == "organelle" { print ">"$$contig; print $$seq }' | \
-		gzip -c > $@
+		gzip -c > $@.incomplete
+	mv $@.incomplete $@
