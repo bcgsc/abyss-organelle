@@ -57,7 +57,7 @@ endif
 # main rules
 #------------------------------------------------------------
 
-# make subdir to store intermediate files (to reduce clutter)
+# make subdirs to store intermediate files (to reduce clutter)
 
 $(tmp):
 	mkdir -p $@
@@ -65,42 +65,35 @@ $(tmp):
 $(plotdir):
 	mkdir -p $@
 
-# build bam file for read-to-contig alignments
+# index the reference
+
+$(ref).bwt: $(ref)
+	bwa index $(ref)
+
+# compute per-contig coverage histograms
 
 ifdef sortedsam
-$(tmp)/$(sortedbam): $(sortedsam) | $(tmp)
-	smartcat $< | samtools view -bSo $(tmp)/$(sortedbam) -
-$(tmp)/$(sortedbam).bai: $(tmp)/$(sortedbam)
-	samtools index $(tmp)/$(sortedbam)
-else
-$(tmp)/$(sortedbam).bai: $(ref) $(readfiles) | $(tmp)
-	$(if $(readfiles),,$(error missing required arg 'readfiles'))
-	bwa-mem.mk j=$j queryfiles='$(readfiles)' target='$(ref)' name='$(tmp)/$(name)'
-endif
-
-# use 'bedtools genomecov' to convert read-to-contig alignment to
-# per-contig coverage
-
-$(tmp)/$(name).genomecov.txt.gz: $(tmp)/$(sortedbam).bai
-	bedtools genomecov -ibam $(tmp)/$(sortedbam) | \
-		egrep -v '^genome' | \
+$(tmp)/$(name).genomecov.txt.gz: $(sortedsam) $(ref).bwt | $(tmp)
+	smartcat $(sortedsam) | \
+		samtools view -bSo - - | \
+		bedtools genomecov -ibam - | \
 		gzip -c > $@.incomplete
 	mv $@.incomplete $@
-
-# remove alignment files after they are no longer needed
-# (saves disk space)
-
-ifdef sortedsam
-clean_aligns: $(tmp)/$(name).genomecov.txt.gz
-	rm -f $(tmp)/$(bam)* $(tmp)/$(sortedbam)*
 else
-clean_aligns: $(tmp)/$(name).genomecov.txt.gz
-	rm -f $(tmp)/$(name).sam.gz $(tmp)/$(bam)* $(tmp)/$(sortedbam)*
+$(tmp)/$(name).genomecov.txt.gz: $(readfiles) $(ref).bwt | $(tmp)
+	smartcat $(readfiles) | \
+		bwa mem $(ref) - | \
+		samtools view -bSo - - | \
+		samtools sort -o - temp | \
+		bedtools genomecov -ibam - | \
+		gzip -c > $@.incomplete
+	mv $@.incomplete $@
 endif
 
-# convert 'bedtools genomecov' output to mean coverage per contig
+# compute per-contig coverage histograms to per-contig
+# mean coverage
 
-$(tmp)/$(name).cov.tab.gz: $(tmp)/$(name).genomecov.txt.gz clean_aligns
+$(tmp)/$(name).cov.tab.gz: $(tmp)/$(name).genomecov.txt.gz
 	zcat $< | cov-hist-to-mean | $(sort) | \
 		(echo -e 'contig\tcov'; cat -) | \
 		gzip -c > $@.incomplete
