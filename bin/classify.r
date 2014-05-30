@@ -63,7 +63,7 @@ invisible(dev.off())
 # mean coverage
 #----------------------------------------
 
-if (centers[1,"cov"] > centers[2,"cov"]) {
+if (centers[1,"gc"] > centers[2,"gc"]) {
 	organelle_cluster = 1
 	genome_cluster = 2
 } else {
