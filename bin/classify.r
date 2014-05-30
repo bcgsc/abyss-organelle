@@ -28,8 +28,8 @@ size.threshold = 2000
 #----------------------------------------
 
 data = read.table(gzfile(input_gz_file), header=TRUE)
-data.subset = subset(data, len >= size.threshold)
-data.subset.scaled = with(data.subset, data.frame(
+data = subset(data, len >= size.threshold)
+data.scaled = with(data, data.frame(
 		cov = scale(log(cov)),
 		gc = scale(gc),
 		len = scale(log(len))))
@@ -38,23 +38,23 @@ data.subset.scaled = with(data.subset, data.frame(
 # cluster the data with kmeans algorithm
 #----------------------------------------
 
-clusters = kmeans(data[c("cov","gc","len")], 2)
+clusters = kmeans(data.scaled[c("cov","gc","len")], 2)
 attach(clusters)
 
 #----------------------------------------
 # plot the clusters (for debugging purposes)
 #----------------------------------------
 
-pdf(paste(plot_dir, 'gc_vs_cov.pdf', sep='/'))
-xyplot(cov ~ gc, data, group = cluster) 
+png(paste(plot_dir, 'gc_vs_cov.png', sep='/'))
+xyplot(cov ~ gc, data.scaled, group = cluster)
 invisible(dev.off())
 
-pdf(paste(plot_dir, 'cov_vs_len.pdf', sep='/'))
-xyplot(cov ~ len, data, group = cluster) 
+png(paste(plot_dir, 'cov_vs_len.png', sep='/'))
+xyplot(cov ~ len, data.scaled, group = cluster)
 invisible(dev.off())
 
-pdf(paste(plot_dir, 'gc_vs_len.pdf', sep='/'))
-xyplot(gc ~ len, data, group = cluster) 
+png(paste(plot_dir, 'gc_vs_len.png', sep='/'))
+xyplot(gc ~ len, data.scaled, group = cluster)
 invisible(dev.off())
 
 #----------------------------------------
