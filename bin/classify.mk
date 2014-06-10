@@ -81,7 +81,7 @@ $(tmp)/$(name).genomecov.txt.gz: $(sortedsam) $(ref).bwt | $(tmp)
 	mv $@.incomplete $@
 else
 $(tmp)/$(name).genomecov.txt.gz: $(readfiles) $(ref).bwt | $(tmp)
-	smartcat $(readfiles) | \
+	abyss-tofastq $(readfiles) | \
 		bwa mem $(ref) - | \
 		samtools view -bSo - - | \
 		samtools sort -o - temp | \
