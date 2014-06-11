@@ -45,15 +45,17 @@ attach(clusters)
 # plot the clusters (for debugging purposes)
 #----------------------------------------
 
-png(paste(plot_dir, 'gc_vs_cov.png', sep='/'))
+trellis.device("postscript", color=TRUE)
+
+bitmap(paste(plot_dir, 'gc_vs_cov.png', sep='/'))
 xyplot(cov ~ gc, data.scaled, group = cluster)
 invisible(dev.off())
 
-png(paste(plot_dir, 'cov_vs_len.png', sep='/'))
+bitmap(paste(plot_dir, 'cov_vs_len.png', sep='/'))
 xyplot(cov ~ len, data.scaled, group = cluster)
 invisible(dev.off())
 
-png(paste(plot_dir, 'gc_vs_len.png', sep='/'))
+bitmap(paste(plot_dir, 'gc_vs_len.png', sep='/'))
 xyplot(gc ~ len, data.scaled, group = cluster)
 invisible(dev.off())
 
